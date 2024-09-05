@@ -11,13 +11,17 @@ function activate(context) {
         const line = document.lineAt(selection.start.line);
         const lineText = line.text;
 
-        if (lineText.startsWith('!!bash')) {
-            const command = lineText.slice(6).trim();
+        if (lineText.startsWith('!!')) {
+            const command = lineText.slice(2).trim();
 
             try {
                 const output = await executeCommand(command);
                 await editor.edit(editBuilder => {
-                    editBuilder.insert(new vscode.Position(line.lineNumber + 1, 0), output);
+		    // insert newline before executing command to separate output from previous command
+			editBuilder.insert(new vscode.Position(line.lineNumber + 1, 0), '\n');
+                });
+                await editor.edit(editBuilder => {
+                    editBuilder.insert(new vscode.Position(line.lineNumber + 2, 0), output);
                 });
             } catch (error) {
                 vscode.window.showErrorMessage(`Error executing command: ${error}`);
